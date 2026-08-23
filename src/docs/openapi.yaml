@@ -1,0 +1,66 @@
+openapi: 3.0.3
+info:
+  title: TaskFlow API
+  version: 1.0.0
+  description: Multi-tenant project management API.
+servers:
+  - url: http://localhost:3000/api/v1
+security:
+  - bearerAuth: []
+paths:
+  /auth/register:
+    post:
+      security: []
+      summary: Register a user and organization
+      responses:
+        '201': { description: Created }
+  /auth/login:
+    post:
+      security: []
+      summary: Login
+      responses:
+        '200': { description: OK }
+  /auth/refresh:
+    post:
+      security: []
+      summary: Refresh access token
+      responses:
+        '200': { description: OK }
+  /auth/logout:
+    post:
+      summary: Revoke refresh token
+      responses:
+        '204': { description: Revoked }
+  /projects:
+    get:
+      summary: List projects
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Create project
+      responses:
+        '201': { description: Created }
+  /tasks:
+    get:
+      summary: Filter and paginate tasks
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: priority, in: query, schema: { type: string } }
+        - { name: assignee, in: query, schema: { type: string, format: uuid } }
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: limit, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+  /jobs/{jobId}:
+    get:
+      summary: Get BullMQ job status
+      parameters:
+        - { name: jobId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
