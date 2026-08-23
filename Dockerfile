@@ -37,4 +37,4 @@ COPY --from=build /app/src/docs ./src/docs
 
 EXPOSE 3000
 
-CMD ["node", "dist/src/server.js"]
+CMD ["npm", "start"]
