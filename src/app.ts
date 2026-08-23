@@ -1,9 +1,11 @@
 import express from 'express';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
-import swaggerJsdoc from 'swagger-jsdoc';
+import { parse as parseYaml } from 'yaml';
 import { env } from './config/env';
 import { errorHandler } from './middleware/errorHandler';
 import apiRouter from './modules/router';
@@ -27,16 +29,8 @@ export function createApp() {
     }),
   );
 
-  const swaggerSpec = swaggerJsdoc({
-    definition: {
-      openapi: '3.0.0',
-      info: {
-        title: 'TaskFlow API',
-        version: '1.0.0',
-      },
-    },
-    apis: ['./src/**/*.ts'],
-  });
+  const openApiPath = path.resolve(process.cwd(), 'src/docs/openapi.yaml');
+  const swaggerSpec = parseYaml(readFileSync(openApiPath, 'utf8'));
 
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

@@ -10,6 +10,7 @@ import * as controller from './controller';
 const router = Router();
 router.use(authenticate);
 router.get('/', asyncRoute(controller.list));
+router.get('/:projectId/dashboard', asyncRoute(controller.dashboard));
 router.post(
   '/',
   validate(
@@ -44,5 +45,4 @@ router.patch(
   asyncRoute(controller.update),
 );
 router.delete('/:projectId', requireRole(Role.org_admin), asyncRoute(controller.remove));
-router.get('/:projectId/dashboard', asyncRoute(controller.dashboard));
 export default router;

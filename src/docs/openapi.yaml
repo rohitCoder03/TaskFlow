@@ -12,23 +12,48 @@ paths:
     post:
       security: []
       summary: Register a user and organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
       responses:
         '201': { description: Created }
   /auth/login:
     post:
       security: []
       summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
       responses:
         '200': { description: OK }
   /auth/refresh:
     post:
       security: []
       summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
       responses:
         '200': { description: OK }
   /auth/logout:
     post:
+      security: []
       summary: Revoke refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
       responses:
         '204': { description: Revoked }
   /projects:
@@ -38,6 +63,12 @@ paths:
         '200': { description: OK }
     post:
       summary: Create project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRequest'
       responses:
         '201': { description: Created }
   /tasks:
@@ -51,6 +82,161 @@ paths:
         - { name: limit, in: query, schema: { type: integer } }
       responses:
         '200': { description: OK }
+  /projects/{projectId}:
+    parameters:
+      - { name: projectId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Get a project
+      responses:
+        '200': { description: OK }
+    patch:
+      summary: Update a project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRequest'
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Delete a project
+      responses:
+        '204': { description: Deleted }
+  /projects/{projectId}/tasks:
+    parameters:
+      - { name: projectId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      summary: Create a task in a project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+      responses:
+        '201': { description: Created }
+  /projects/{projectId}/dashboard:
+    parameters:
+      - { name: projectId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Get project dashboard
+      responses:
+        '200': { description: OK }
+  /tasks/{taskId}:
+    parameters:
+      - { name: taskId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: Get a task
+      responses:
+        '200': { description: OK }
+    patch:
+      summary: Update a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Delete a task
+      responses:
+        '204': { description: Deleted }
+  /tasks/{taskId}/assignments:
+    parameters:
+      - { name: taskId, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      summary: Assign a task to an organization member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: string, format: uuid }
+      responses:
+        '201': { description: Assigned }
+  /tasks/{taskId}/assignments/{userId}:
+    parameters:
+      - { name: taskId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    delete:
+      summary: Remove a task assignment
+      responses:
+        '204': { description: Unassigned }
+  /tasks/{taskId}/comments:
+    parameters:
+      - { name: taskId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      summary: List task comments
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Add a task comment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentRequest'
+      responses:
+        '201': { description: Created }
+  /comments/{commentId}:
+    parameters:
+      - { name: commentId, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      summary: Update a comment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentRequest'
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Delete a comment
+      responses:
+        '204': { description: Deleted }
+  /members:
+    get:
+      summary: List organization members
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Add an organization member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberRequest'
+      responses:
+        '201': { description: Created }
+  /members/{userId}:
+    parameters:
+      - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      summary: Update a member role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { type: string, enum: [org_admin, member] }
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Remove an organization member
+      responses:
+        '204': { description: Deleted }
   /jobs/{jobId}:
     get:
       summary: Get BullMQ job status
@@ -64,3 +250,50 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [name, email, password, organizationName]
+      properties:
+        name: { type: string, minLength: 2 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8, format: password }
+        organizationName: { type: string, minLength: 2 }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken: { type: string }
+    ProjectRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+    TaskRequest:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string }
+        status: { type: string, enum: [todo, in_progress, review, done] }
+        priority: { type: string, enum: [low, medium, high, urgent] }
+        dueDate: { type: string, format: date-time, nullable: true }
+    CommentRequest:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1 }
+    MemberRequest:
+      type: object
+      required: [email, name, password]
+      properties:
+        email: { type: string, format: email }
+        name: { type: string, minLength: 2 }
+        password: { type: string, minLength: 8, format: password }
+        role: { type: string, enum: [org_admin, member] }
